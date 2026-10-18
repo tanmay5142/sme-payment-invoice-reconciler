@@ -1,0 +1,75 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum InvoiceStatus {
+  OPEN
+  PART_PAID
+  PAID
+}
+
+enum BankStatus {
+  CLEARED
+  PENDING
+}
+
+enum AllocationStatus {
+  PROPOSED
+  APPROVED
+  APPLIED
+  REJECTED
+}
+
+// Amounts are whole rupees to keep things simple.
+model Invoice {
+  id          String        @id // e.g. "INV-101"
+  customer    String
+  amount      Int
+  paidAmount  Int           @default(0)
+  dueDate     DateTime
+  status      InvoiceStatus @default(OPEN)
+  note        String?
+  allocations Allocation[]
+  createdAt   DateTime      @default(now())
+}
+
+model BankTransaction {
+  id          String       @id // e.g. "B-001"
+  date        DateTime
+  description String
+  reference   String?
+  amount      Int
+  status      BankStatus
+  allocations Allocation[]
+  createdAt   DateTime     @default(now())
+}
+
+// Links one bank transaction to one invoice (a split payment has two rows).
+model Allocation {
+  id             String           @id @default(cuid())
+  invoiceId      String
+  bankTxnId      String
+  amount         Int
+  status         AllocationStatus @default(PROPOSED)
+  reason         String           // why the agent matched them
+  confidence     String           @default("HIGH") // HIGH, MEDIUM, UNCERTAIN
+  idempotencyKey String           @unique // stops double marking
+  approvedAt     DateTime?
+  appliedAt      DateTime?
+  createdAt      DateTime         @default(now())
+  invoice        Invoice          @relation(fields: [invoiceId], references: [id])
+  bankTxn        BankTransaction  @relation(fields: [bankTxnId], references: [id])
+}
+
+// Every important action is saved here.
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  details   Json
+  createdAt DateTime @default(now())
+}
