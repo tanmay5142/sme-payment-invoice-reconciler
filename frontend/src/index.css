@@ -1,0 +1,32 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, sans-serif; background: #f5f6fa; color: #1f2430; }
+
+.topbar { display: flex; align-items: center; gap: 32px; padding: 14px 28px; background: #1f2a44; color: #fff; }
+.logo { font-weight: 700; font-size: 18px; }
+.topbar nav { display: flex; gap: 20px; }
+.topbar a { color: #b8c2dd; text-decoration: none; padding-bottom: 4px; }
+.topbar a.active { color: #fff; border-bottom: 2px solid #5b8cff; }
+
+.page { max-width: 1100px; margin: 24px auto; padding: 0 20px; }
+h1 { margin: 0 0 16px; font-size: 22px; }
+
+.cards { display: flex; gap: 16px; margin-bottom: 20px; }
+.card { flex: 1; background: #fff; border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 6px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.card span { color: #6b7385; font-size: 13px; }
+.card strong { font-size: 22px; }
+
+table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eceef4; font-size: 14px; }
+th { background: #f0f2f8; font-weight: 600; }
+
+.badge { padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
+.badge.OPEN { background: #e8eefc; color: #2b55c9; }
+.badge.PART_PAID { background: #fff1d6; color: #a86a00; }
+.badge.PAID, .badge.CLEARED { background: #dcf5e4; color: #1b7a3d; }
+.badge.PENDING { background: #ffe1e1; color: #b42323; }
+
+button { background: #3b6df0; color: #fff; border: 0; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+button.secondary { background: #e3e6ef; color: #333; }
+.inline { display: flex; gap: 6px; align-items: center; }
+.inline input { width: 90px; padding: 5px; }
+.error { color: #b42323; background: #ffe1e1; padding: 8px 12px; border-radius: 6px; }

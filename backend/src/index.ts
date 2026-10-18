@@ -21,5 +21,40 @@ app.get("/api/bank-transactions", async (_req, res) => {
   res.json(txns);
 });
 
+app.post("/api/invoices/:id/mark-paid", async (req, res) => {
+  const id = String(req.params.id);
+  const amount = Number(req.body?.amount);
+
+  const invoice = await prisma.invoice.findUnique({ where: { id } });
+  if (!invoice) {
+    res.status(404).json({ error: "Invoice not found" });
+    return;
+  }
+  if (!Number.isInteger(amount) || amount <= 0) {
+    res.status(400).json({ error: "Amount must be a whole number above 0" });
+    return;
+  }
+
+  const remaining = invoice.amount - invoice.paidAmount;
+  if (amount > remaining) {
+    res.status(400).json({ error: `Amount is more than the balance (${remaining})` });
+    return;
+  }
+
+  const paidAmount = invoice.paidAmount + amount;
+  const status = paidAmount >= invoice.amount ? "PAID" : "PART_PAID";
+
+  const updated = await prisma.invoice.update({
+    where: { id },
+    data: { paidAmount, status },
+  });
+
+  await prisma.auditLog.create({
+    data: { action: "MARK_PAID_MANUAL", details: { invoiceId: id, amount, status } },
+  });
+
+  res.json(updated);
+});
+
 const port = Number(process.env.PORT) || 4000;
 app.listen(port, () => console.log(`Backend running on port ${port}`));
