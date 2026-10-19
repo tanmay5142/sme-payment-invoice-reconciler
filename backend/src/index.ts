@@ -2,6 +2,7 @@ import "dotenv/config";
 import express from "express";
 import cors from "cors";
 import { prisma } from "./db";
+import { runReconciliation } from "./matching/service";
 
 const app = express();
 app.use(cors());
@@ -54,6 +55,20 @@ app.post("/api/invoices/:id/mark-paid", async (req, res) => {
   });
 
   res.json(updated);
+});
+
+app.post("/api/reconcile/run", async (_req, res) => {
+  const result = await runReconciliation();
+  res.json(result);
+});
+
+app.get("/api/reconcile/results", async (_req, res) => {
+  const findings = await prisma.finding.findMany({
+    include: { bankTxn: true },
+    orderBy: { bankTxnId: "asc" },
+  });
+  const allocations = await prisma.allocation.findMany({ orderBy: { createdAt: "asc" } });
+  res.json({ findings, allocations });
 });
 
 const port = Number(process.env.PORT) || 4000;

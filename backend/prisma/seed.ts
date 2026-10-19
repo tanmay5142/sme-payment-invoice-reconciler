@@ -4,6 +4,7 @@ const prisma = new PrismaClient();
 
 async function main() {
   // Clear old data so the seed can be run again
+  await prisma.finding.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.allocation.deleteMany();
   await prisma.invoice.deleteMany();

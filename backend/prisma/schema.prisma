@@ -46,6 +46,7 @@ model BankTransaction {
   amount      Int
   status      BankStatus
   allocations Allocation[]
+  finding     Finding?
   createdAt   DateTime     @default(now())
 }
 
@@ -72,4 +73,28 @@ model AuditLog {
   action    String
   details   Json
   createdAt DateTime @default(now())
+}
+
+enum Outcome {
+  MATCHED
+  PARTIAL
+  PENDING
+  UNMATCHED
+  UNCERTAIN
+}
+
+// One finding per bank transaction: what we decided and why.
+model Finding {
+  id         String          @id @default(cuid())
+  bankTxnId  String          @unique
+  outcome    Outcome
+  reason     String
+  confidence String          // HIGH, MEDIUM, UNCERTAIN
+  flags      String[]
+  needsAi    Boolean         @default(false)
+  source     String          @default("RULES") // RULES or AI
+  evidence   Json
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  bankTxn    BankTransaction @relation(fields: [bankTxnId], references: [id])
 }
