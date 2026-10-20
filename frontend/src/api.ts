@@ -74,3 +74,37 @@ export const applyTxn = (id: string) =>
 export const rejectTxn = (id: string) =>
   request<unknown>(`/api/approvals/${id}/reject`, { method: "POST" });
 export const getAuditLogs = () => request<AuditLog[]>("/api/audit-logs");
+
+export type VerifyCheck = {
+  id: string;
+  name: string;
+  status: "PASS" | "WARN" | "FAIL";
+  detail: string;
+  problems: string[];
+};
+
+export type VerifyTxnRow = {
+  bankTxnId: string;
+  bankAmount: number;
+  bankStatus: string;
+  appliedTotal: number;
+  state: "VERIFIED" | "FAILED" | "WAITING" | "NOT_MATCHED" | "PART_USED";
+  note: string;
+};
+
+export type VerifyResult = {
+  overall: "PASS" | "FAIL";
+  totals: {
+    clearedReceipts: number;
+    matchedReceipts: number;
+    appliedToInvoices: number;
+    notYetMatched: number;
+    pendingInBank: number;
+  };
+  checks: VerifyCheck[];
+  transactions: VerifyTxnRow[];
+};
+
+export const getVerification = () => request<VerifyResult>("/api/verification");
+export const runVerification = () =>
+  request<VerifyResult>("/api/verification", { method: "POST" });

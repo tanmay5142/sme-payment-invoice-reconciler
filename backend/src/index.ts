@@ -6,6 +6,7 @@ import { runReconciliation } from "./matching/service";
 import { runAi } from "./ai/agent";
 import type { Request, Response, NextFunction } from "express";
 import { HttpError, listApprovals, approveTxn, applyTxn, rejectTxn } from "./approvals/service";
+import { runVerification, verifyAndLog } from "./verify/service";
 
 const app = express();
 app.use(cors());
@@ -94,7 +95,10 @@ app.post("/api/approvals/:bankTxnId/approve", wrap(async (req, res) => {
 }));
 
 app.post("/api/approvals/:bankTxnId/apply", wrap(async (req, res) => {
-  res.json(await applyTxn(String(req.params.bankTxnId)));
+  const result = await applyTxn(String(req.params.bankTxnId));
+  // Check our own work right after acting. Failures are reported, never hidden.
+  const verification = await verifyAndLog("after-apply");
+  res.json({ ...result, verification: { overall: verification.overall } });
 }));
 
 app.post("/api/approvals/:bankTxnId/reject", wrap(async (req, res) => {
@@ -103,6 +107,14 @@ app.post("/api/approvals/:bankTxnId/reject", wrap(async (req, res) => {
 
 app.get("/api/audit-logs", wrap(async (_req, res) => {
   res.json(await prisma.auditLog.findMany({ orderBy: { createdAt: "desc" }, take: 50 }));
+}));
+
+app.get("/api/verification", wrap(async (_req, res) => {
+  res.json(await runVerification());
+}));
+
+app.post("/api/verification", wrap(async (_req, res) => {
+  res.json(await verifyAndLog("manual"));
 }));
 
 // Must come after all routes: turns errors into clear messages
