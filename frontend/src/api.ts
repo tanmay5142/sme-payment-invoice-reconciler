@@ -36,3 +36,41 @@ export const markPaid = (id: string, amount: number) =>
     method: "POST",
     body: JSON.stringify({ amount }),
   });
+
+export type ApprovalAllocation = {
+  id: string;
+  invoiceId: string;
+  customer: string;
+  amount: number;
+  status: "PROPOSED" | "APPROVED" | "APPLIED" | "REJECTED";
+  invoiceTotal: number;
+  paidBefore: number;
+  paidAfter: number;
+  statusAfter: "OPEN" | "PART_PAID" | "PAID";
+};
+
+export type ApprovalGroup = {
+  bankTxn: BankTxn;
+  finding: {
+    outcome: string;
+    reason: string;
+    confidence: string;
+    flags: string[];
+    source: string;
+  } | null;
+  status: "PROPOSED" | "APPROVED" | "APPLIED" | "REJECTED";
+  allocations: ApprovalAllocation[];
+};
+
+export type AuditLog = { id: string; action: string; details: unknown; createdAt: string };
+
+export const runRules = () => request<unknown>("/api/reconcile/run", { method: "POST" });
+export const runAi = () => request<unknown>("/api/reconcile/ai", { method: "POST" });
+export const getApprovals = () => request<ApprovalGroup[]>("/api/approvals");
+export const approveTxn = (id: string) =>
+  request<unknown>(`/api/approvals/${id}/approve`, { method: "POST" });
+export const applyTxn = (id: string) =>
+  request<unknown>(`/api/approvals/${id}/apply`, { method: "POST" });
+export const rejectTxn = (id: string) =>
+  request<unknown>(`/api/approvals/${id}/reject`, { method: "POST" });
+export const getAuditLogs = () => request<AuditLog[]>("/api/audit-logs");

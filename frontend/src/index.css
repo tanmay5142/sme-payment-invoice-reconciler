@@ -30,3 +30,22 @@ button.secondary { background: #e3e6ef; color: #333; }
 .inline { display: flex; gap: 6px; align-items: center; }
 .inline input { width: 90px; padding: 5px; }
 .error { color: #b42323; background: #ffe1e1; padding: 8px 12px; border-radius: 6px; }
+
+h2 { font-size: 17px; margin: 28px 0 12px; }
+.toolbar { display: flex; gap: 14px; align-items: center; margin-bottom: 16px; }
+.muted { color: #6b7385; font-size: 13px; }
+.msg { color: #1b7a3d; background: #dcf5e4; padding: 8px 12px; border-radius: 6px; }
+
+.approval { background: #fff; border-radius: 8px; padding: 16px; margin-bottom: 16px; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+.approval.done { padding: 12px 16px; margin-bottom: 10px; }
+.approval-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.reason { background: #f0f2f8; padding: 8px 12px; border-radius: 6px; font-size: 14px; margin: 10px 0; }
+.badges { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.flag { padding: 3px 10px; border-radius: 12px; font-size: 12px; background: #e3e6ef; color: #333; }
+.flag.warn { background: #fff1d6; color: #a86a00; font-weight: 600; }
+.badge.conf-HIGH { background: #dcf5e4; color: #1b7a3d; }
+.badge.conf-MEDIUM { background: #fff1d6; color: #a86a00; }
+.badge.conf-UNCERTAIN { background: #ffe1e1; color: #b42323; }
+.actions { margin-top: 14px; }
+button.danger { background: #d64545; }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
