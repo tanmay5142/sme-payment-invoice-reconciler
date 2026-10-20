@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import { prisma } from "./db";
 import { runReconciliation } from "./matching/service";
+import { runAi } from "./ai/agent";
 
 const app = express();
 app.use(cors());
@@ -69,6 +70,11 @@ app.get("/api/reconcile/results", async (_req, res) => {
   });
   const allocations = await prisma.allocation.findMany({ orderBy: { createdAt: "asc" } });
   res.json({ findings, allocations });
+});
+
+app.post("/api/reconcile/ai", async (_req, res) => {
+  const result = await runAi();
+  res.json(result);
 });
 
 const port = Number(process.env.PORT) || 4000;
