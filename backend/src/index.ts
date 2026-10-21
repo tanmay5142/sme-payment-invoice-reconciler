@@ -7,6 +7,7 @@ import { runAi } from "./ai/agent";
 import type { Request, Response, NextFunction } from "express";
 import { HttpError, listApprovals, approveTxn, applyTxn, rejectTxn } from "./approvals/service";
 import { runVerification, verifyAndLog } from "./verify/service";
+import { getReport } from "./results/service";
 
 const app = express();
 app.use(cors());
@@ -115,6 +116,10 @@ app.get("/api/verification", wrap(async (_req, res) => {
 
 app.post("/api/verification", wrap(async (_req, res) => {
   res.json(await verifyAndLog("manual"));
+}));
+
+app.get("/api/report", wrap(async (_req, res) => {
+  res.json(await getReport());
 }));
 
 // Must come after all routes: turns errors into clear messages
