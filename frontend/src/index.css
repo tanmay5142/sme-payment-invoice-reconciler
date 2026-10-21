@@ -61,3 +61,9 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .checks .WARN .mark { color: #a86a00; }
 .checks .FAIL .mark { color: #b42323; }
 .checks li ul { margin: 6px 0 0; padding-left: 18px; color: #b42323; font-size: 13px; }
+
+.right { text-align: right; }
+.card small { color: #6b7385; }
+details { margin-top: 8px; }
+details summary { cursor: pointer; font-size: 13px; color: #3b6df0; }
+.evidence { background: #f0f2f8; padding: 10px; border-radius: 6px; font-size: 12px; overflow: auto; max-height: 260px; }

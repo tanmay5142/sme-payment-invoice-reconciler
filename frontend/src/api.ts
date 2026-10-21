@@ -108,3 +108,45 @@ export type VerifyResult = {
 export const getVerification = () => request<VerifyResult>("/api/verification");
 export const runVerification = () =>
   request<VerifyResult>("/api/verification", { method: "POST" });
+
+export type ReportRow = {
+  bankTxnId: string;
+  date: string;
+  description: string;
+  reference: string | null;
+  bankAmount: number;
+  bankStatus: "CLEARED" | "PENDING";
+  category: "MATCHED" | "PARTIAL" | "UNMATCHED";
+  stage: "PAID" | "APPROVED" | "AWAITING_APPROVAL" | "REJECTED" | "NOT_MATCHED" | "PENDING_IN_BANK";
+  invoices: { invoiceId: string; customer: string; amount: number; invoiceTotal: number; paidAfter: number }[];
+  reason: string;
+  confidence: string;
+  source: string;
+  flags: string[];
+  evidence: unknown;
+};
+
+export type OpenInvoiceRow = {
+  invoiceId: string;
+  customer: string;
+  amount: number;
+  paidAmount: number;
+  balance: number;
+  dueDate: string;
+  why: string;
+};
+
+export type Report = {
+  summary: {
+    matched: { count: number; amount: number };
+    partial: { count: number; amount: number };
+    unmatched: { count: number; amount: number };
+    openInvoices: { count: number; balance: number };
+  };
+  matched: ReportRow[];
+  partial: ReportRow[];
+  unmatched: ReportRow[];
+  openInvoices: OpenInvoiceRow[];
+};
+
+export const getReport = () => request<Report>("/api/report");

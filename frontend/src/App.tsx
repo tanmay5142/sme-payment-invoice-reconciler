@@ -3,6 +3,7 @@ import Invoices from "./pages/Invoices";
 import BankTransactions from "./pages/BankTransactions";
 import Reconcile from "./pages/Reconcile";
 import Verification from "./pages/Verification";
+import Results from "./pages/Results";
 
 export default function App() {
   return (
@@ -14,6 +15,7 @@ export default function App() {
           <NavLink to="/bank">Bank</NavLink>
           <NavLink to="/reconcile">Reconcile</NavLink>
           <NavLink to="/verify">Verify</NavLink>
+          <NavLink to="/results">Results</NavLink>
         </nav>
       </header>
       <main className="page">
@@ -23,6 +25,7 @@ export default function App() {
           <Route path="/reconcile" element={<Reconcile />} />
           <Route path="/bank" element={<BankTransactions />} />
           <Route path="/verify" element={<Verification />} />
+          <Route path="/results" element={<Results />} />
         </Routes>
       </main>
     </BrowserRouter>
