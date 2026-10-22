@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { applyTxn, approveTxn, getApprovals, getAuditLogs, rejectTxn, runAi, runRules } from "../api";
+import { applyTxn, approveTxn, getApprovals, getAuditLogs, rejectTxn, runAi, runRules, applyBrowserTxn } from "../api";
 import type { ApprovalGroup, AuditLog } from "../api";
 import { money, shortDate } from "../format";
 import { flagLabel } from "../flags";
@@ -151,6 +151,23 @@ export default function Reconcile() {
               }
             >
               {busy === g.bankTxn.id ? "Working..." : "Approve and mark paid"}
+            </button>
+                        <button
+              id={`approve-browser-${g.bankTxn.id}`}
+              className="secondary"
+              disabled={busy !== null}
+              onClick={() =>
+                act(
+                  g.bankTxn.id,
+                  async () => {
+                    await approveTxn(g.bankTxn.id);
+                    await applyBrowserTxn(g.bankTxn.id);
+                  },
+                  `${g.bankTxn.id} approved and marked paid by the browser agent.`
+                )
+              }
+            >
+              Approve and mark paid with browser agent
             </button>
             <button
               id={`reject-${g.bankTxn.id}`}

@@ -11,6 +11,7 @@ export default function Invoices() {
   const [error, setError] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [amount, setAmount] = useState("");
+  const [bankRef, setBankRef] = useState("");
 
   async function load() {
     try {
@@ -30,11 +31,12 @@ export default function Invoices() {
   function startEdit(inv: Invoice) {
     setEditingId(inv.id);
     setAmount(String(inv.amount - inv.paidAmount));
+    setBankRef("");
   }
 
   async function confirm(id: string) {
     try {
-      await markPaid(id, Number(amount));
+      await markPaid(id, Number(amount), bankRef.trim() || undefined);
       setEditingId(null);
       await load();
     } catch (e) {
@@ -76,6 +78,7 @@ export default function Invoices() {
             <th>Paid</th>
             <th>Balance</th>
             <th>Due date</th>
+            <th>Bank line</th>
             <th>Status</th>
             <th>Action</th>
           </tr>
@@ -86,9 +89,10 @@ export default function Invoices() {
               <td>{inv.id}</td>
               <td>{inv.customer}</td>
               <td>{money(inv.amount)}</td>
-              <td>{money(inv.paidAmount)}</td>
+              <td data-testid={`paid-${inv.id}`}>{money(inv.paidAmount)}</td>
               <td>{money(inv.amount - inv.paidAmount)}</td>
               <td>{shortDate(inv.dueDate)}</td>
+              <td data-testid={`bank-${inv.id}`}>{inv.bankLines.length > 0 ? inv.bankLines.join(", ") : "—"}</td>
               <td>
                 <span className={`badge ${inv.status}`} data-testid={`status-${inv.id}`}>
                   {statusLabel[inv.status]}
@@ -102,8 +106,16 @@ export default function Invoices() {
                     <input
                       id={`amount-${inv.id}`}
                       type="number"
+                      placeholder="Amount"
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
+                    />
+                    <input
+                      id={`bank-${inv.id}`}
+                      type="text"
+                      placeholder="Bank ID"
+                      value={bankRef}
+                      onChange={(e) => setBankRef(e.target.value)}
                     />
                     <button id={`confirm-${inv.id}`} onClick={() => confirm(inv.id)}>
                       Confirm

@@ -8,6 +8,7 @@ export type Invoice = {
   dueDate: string;
   status: "OPEN" | "PART_PAID" | "PAID";
   note: string | null;
+  bankLines: string[];
 };
 
 export type BankTxn = {
@@ -31,10 +32,10 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 
 export const getInvoices = () => request<Invoice[]>("/api/invoices");
 export const getBankTxns = () => request<BankTxn[]>("/api/bank-transactions");
-export const markPaid = (id: string, amount: number) =>
+export const markPaid = (id: string, amount: number, bankTxnId?: string) =>
   request<Invoice>(`/api/invoices/${id}/mark-paid`, {
     method: "POST",
-    body: JSON.stringify({ amount }),
+    body: JSON.stringify({ amount, bankTxnId }),
   });
 
 export type ApprovalAllocation = {
@@ -150,3 +151,6 @@ export type Report = {
 };
 
 export const getReport = () => request<Report>("/api/report");
+
+export const applyBrowserTxn = (id: string) =>
+  request<unknown>(`/api/approvals/${id}/apply-browser`, { method: "POST" });

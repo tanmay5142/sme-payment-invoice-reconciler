@@ -180,3 +180,56 @@ export async function rejectTxn(bankTxnId: string, reason?: string) {
   });
   return { bankTxnId, rejected: true };
 }
+
+// The action the dashboard button uses.
+// With a bank transaction ID, it only works if a human approved exactly this payment.
+export async function markInvoicePaid(invoiceId: string, amount: number, bankTxnId?: string) {
+  if (!Number.isInteger(amount) || amount <= 0) {
+    throw new HttpError(400, "Amount must be a whole number above 0");
+  }
+
+  return prisma.$transaction(
+    async (tx) => {
+      const invoice = await tx.invoice.findUnique({ where: { id: invoiceId } });
+      if (!invoice) throw new HttpError(404, "Invoice not found");
+
+      const remaining = invoice.amount - invoice.paidAmount;
+      if (amount > remaining) {
+        throw new HttpError(400, `Amount is more than the balance (${remaining})`);
+      }
+
+      if (bankTxnId) {
+        const claim = await tx.allocation.updateMany({
+          where: { invoiceId, bankTxnId, amount, status: "APPROVED" },
+          data: { status: "APPLIED", appliedAt: new Date() },
+        });
+        if (claim.count !== 1) {
+          throw new HttpError(
+            409,
+            `No approved payment of Rs ${amount} from ${bankTxnId} for ${invoiceId}. It may already be applied, or it was never approved.`
+          );
+        }
+      }
+
+      const updated = await tx.invoice.update({
+        where: { id: invoiceId },
+        data: { paidAmount: { increment: amount } },
+      });
+      if (updated.paidAmount > updated.amount) {
+        throw new HttpError(409, `Invoice ${invoiceId} would be overpaid, so nothing was changed`);
+      }
+
+      const status = statusFor(updated.paidAmount, updated.amount);
+      const saved = await tx.invoice.update({ where: { id: invoiceId }, data: { status } });
+
+      await tx.auditLog.create({
+        data: {
+          action: bankTxnId ? "MARK_PAID_LINKED" : "MARK_PAID_MANUAL",
+          details: { invoiceId, amount, bankTxnId: bankTxnId ?? null, status },
+        },
+      });
+      return saved;
+    },
+    { timeout: 20000 }
+  );
+}

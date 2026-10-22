@@ -5,9 +5,10 @@ import { prisma } from "./db";
 import { runReconciliation } from "./matching/service";
 import { runAi } from "./ai/agent";
 import type { Request, Response, NextFunction } from "express";
-import { HttpError, listApprovals, approveTxn, applyTxn, rejectTxn } from "./approvals/service";
+import { HttpError, listApprovals, approveTxn, applyTxn, rejectTxn, markInvoicePaid } from "./approvals/service";
 import { runVerification, verifyAndLog } from "./verify/service";
 import { getReport } from "./results/service";
+import { applyWithBrowser, EVIDENCE_DIR } from "./browser/agent";
 
 const app = express();
 app.use(cors());
@@ -23,50 +24,28 @@ app.get("/health", (_req, res) => {
   res.json({ ok: true });
 });
 
-app.get("/api/invoices", async (_req, res) => {
-  const invoices = await prisma.invoice.findMany({ orderBy: { id: "asc" } });
-  res.json(invoices);
-});
+app.get("/api/invoices", wrap(async (_req, res) => {
+  const invoices = await prisma.invoice.findMany({
+    orderBy: { id: "asc" },
+    include: { allocations: { where: { status: "APPLIED" }, select: { bankTxnId: true } } },
+  });
+  res.json(
+    invoices.map(({ allocations, ...inv }) => ({
+      ...inv,
+      bankLines: [...new Set(allocations.map((a) => a.bankTxnId))],
+    }))
+  );
+}));
 
 app.get("/api/bank-transactions", async (_req, res) => {
   const txns = await prisma.bankTransaction.findMany({ orderBy: { id: "asc" } });
   res.json(txns);
 });
 
-app.post("/api/invoices/:id/mark-paid", async (req, res) => {
-  const id = String(req.params.id);
-  const amount = Number(req.body?.amount);
-
-  const invoice = await prisma.invoice.findUnique({ where: { id } });
-  if (!invoice) {
-    res.status(404).json({ error: "Invoice not found" });
-    return;
-  }
-  if (!Number.isInteger(amount) || amount <= 0) {
-    res.status(400).json({ error: "Amount must be a whole number above 0" });
-    return;
-  }
-
-  const remaining = invoice.amount - invoice.paidAmount;
-  if (amount > remaining) {
-    res.status(400).json({ error: `Amount is more than the balance (${remaining})` });
-    return;
-  }
-
-  const paidAmount = invoice.paidAmount + amount;
-  const status = paidAmount >= invoice.amount ? "PAID" : "PART_PAID";
-
-  const updated = await prisma.invoice.update({
-    where: { id },
-    data: { paidAmount, status },
-  });
-
-  await prisma.auditLog.create({
-    data: { action: "MARK_PAID_MANUAL", details: { invoiceId: id, amount, status } },
-  });
-
-  res.json(updated);
-});
+app.post("/api/invoices/:id/mark-paid", wrap(async (req, res) => {
+  const bankTxnId = req.body?.bankTxnId ? String(req.body.bankTxnId).trim().toUpperCase() : undefined;
+  res.json(await markInvoicePaid(String(req.params.id), Number(req.body?.amount), bankTxnId));
+}));
 
 app.post("/api/reconcile/run", async (_req, res) => {
   const result = await runReconciliation();
@@ -121,6 +100,13 @@ app.post("/api/verification", wrap(async (_req, res) => {
 app.get("/api/report", wrap(async (_req, res) => {
   res.json(await getReport());
 }));
+
+app.post("/api/approvals/:bankTxnId/apply-browser", wrap(async (req, res) => {
+  res.json(await applyWithBrowser(String(req.params.bankTxnId)));
+}));
+
+// Screenshots taken by the browser agent
+app.use("/evidence", express.static(EVIDENCE_DIR));
 
 // Must come after all routes: turns errors into clear messages
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
