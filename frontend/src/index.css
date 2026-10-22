@@ -67,3 +67,6 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 details { margin-top: 8px; }
 details summary { cursor: pointer; font-size: 13px; color: #3b6df0; }
 .evidence { background: #f0f2f8; padding: 10px; border-radius: 6px; font-size: 12px; overflow: auto; max-height: 260px; }
+
+h3 { font-size: 14px; margin: 14px 0 6px; }
+.approval table { margin-bottom: 10px; box-shadow: none; }

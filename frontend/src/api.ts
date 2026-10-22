@@ -154,3 +154,26 @@ export const getReport = () => request<Report>("/api/report");
 
 export const applyBrowserTxn = (id: string) =>
   request<unknown>(`/api/approvals/${id}/apply-browser`, { method: "POST" });
+
+export type TestRunRow = {
+  id: string;
+  batchId: string;
+  testCase: string;
+  scenario: string;
+  input: {
+    invoiceLedger: { id: string; customer: string; amount: number; paidAmount: number; status: string }[];
+    bankTransactions: { id: string; description: string; reference: string | null; amount: number; status: string }[];
+  };
+  expected: string;
+  actual: string;
+  status: "PASS" | "FAIL";
+  explanation: string;
+  evidence: unknown;
+  mode: string;
+  createdAt: string;
+};
+
+export const runTestCases = (useBrowser: boolean) =>
+  request<TestRunRow[]>("/api/tests/run", { method: "POST", body: JSON.stringify({ useBrowser }) });
+export const getLatestTests = () => request<TestRunRow[]>("/api/tests/latest");
+export const resetDemo = () => request<unknown>("/api/demo/reset", { method: "POST" });

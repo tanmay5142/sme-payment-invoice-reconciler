@@ -98,3 +98,18 @@ model Finding {
   updatedAt  DateTime        @updatedAt
   bankTxn    BankTransaction @relation(fields: [bankTxnId], references: [id])
 }
+
+model TestRun {
+  id          String   @id @default(cuid())
+  batchId     String
+  testCase    String
+  scenario    String
+  input       Json
+  expected    String
+  actual      String
+  status      String   // PASS or FAIL
+  explanation String
+  evidence    Json
+  mode        String   // api or browser
+  createdAt   DateTime @default(now())
+}

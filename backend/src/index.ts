@@ -9,6 +9,8 @@ import { HttpError, listApprovals, approveTxn, applyTxn, rejectTxn, markInvoiceP
 import { runVerification, verifyAndLog } from "./verify/service";
 import { getReport } from "./results/service";
 import { applyWithBrowser, EVIDENCE_DIR } from "./browser/agent";
+import { resetDemoData } from "./demo/data";
+import { runOfficialTestCases, latestTestRun } from "./testcases/runner";
 
 const app = express();
 app.use(cors());
@@ -107,6 +109,19 @@ app.post("/api/approvals/:bankTxnId/apply-browser", wrap(async (req, res) => {
 
 // Screenshots taken by the browser agent
 app.use("/evidence", express.static(EVIDENCE_DIR));
+
+app.post("/api/tests/run", wrap(async (req, res) => {
+  res.json(await runOfficialTestCases(Boolean(req.body?.useBrowser)));
+}));
+
+app.get("/api/tests/latest", wrap(async (_req, res) => {
+  res.json(await latestTestRun());
+}));
+
+app.post("/api/demo/reset", wrap(async (_req, res) => {
+  await resetDemoData();
+  res.json({ ok: true });
+}));
 
 // Must come after all routes: turns errors into clear messages
 app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
