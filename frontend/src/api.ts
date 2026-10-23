@@ -1,4 +1,9 @@
-const API = import.meta.env.VITE_API_URL ?? "http://localhost:4000";
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim();
+const API = configuredApiUrl
+  ? configuredApiUrl.replace(/\/+$/, "")
+  : import.meta.env.DEV
+    ? "http://localhost:4000"
+    : "";
 
 export type Invoice = {
   id: string;
@@ -21,10 +26,23 @@ export type BankTxn = {
 };
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
+  if (!API && !import.meta.env.DEV) {
+    throw new Error(
+      "VITE_API_URL is not configured for this deployment. Set it to the backend URL and redeploy the frontend.",
+    );
+  }
+
   const res = await fetch(`${API}${path}`, {
     headers: { "Content-Type": "application/json" },
     ...options,
   });
+  const contentType = res.headers.get("content-type") ?? "";
+  if (!contentType.includes("application/json") && !contentType.includes("+json")) {
+    throw new Error(
+      `Expected a JSON response from ${path}, but received ${contentType || "an unknown content type"} (HTTP ${res.status}). Check that VITE_API_URL points to the deployed backend, not the frontend.`,
+    );
+  }
+
   const data = await res.json();
   if (!res.ok) throw new Error(data.error ?? "Request failed");
   return data as T;
